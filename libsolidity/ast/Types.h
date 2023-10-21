@@ -1142,11 +1142,26 @@ public:
 		ECRecover, ///< CALL to special contract for ecrecover
 		SHA256, ///< CALL to special contract for sha256
 		RIPEMD160, ///< CALL to special contract for ripemd160
+		RIPEMD192, ///< CALL to special contract for ripemd192
 		Event, ///< syntactic sugar for LOG*
 		Error, ///< creating an error instance in revert or require
+		// Wrap, ///< customType.wrap(...) for user defined value types
+		// Unwrap, ///< customType.unwrap(...) for user defined value types
 		SetGas, ///< modify the default gas value for the function call
 		SetValue, ///< modify the default value transfer for the function call
 		BlockHash, ///< BLOCKHASH
+		Pdcv,
+		Bprv, ///< BPRV
+		CanTrust,
+		IsRegulatory,
+		Regular,
+		CompareStr,
+		ContainStr,
+		Pub2Bid, ///< CALL to special contract for pub2bid
+		PeerId2Bid, ///< CALL to special contract for peerId2bid
+		Str2Bid, ///< CALL to special contract for str2bid
+		Sign2Bid, ///< CALL to special contract for sign2bid
+		SetCanTrust,
 		AddMod, ///< ADDMOD
 		MulMod, ///< MULMOD
 		ArrayPush, ///< .push() to a dynamically sized array in storage
@@ -1158,6 +1173,7 @@ public:
 		ABIEncode,
 		ABIEncodePacked,
 		ABIEncodeWithSelector,
+		ABIEncodeCall,
 		ABIEncodeWithSignature,
 		ABIDecode,
 		GasLeft, ///< gasleft()
@@ -1167,6 +1183,39 @@ public:
 		/// Cannot be called.
 		Declaration,
 	};
+
+	struct Options
+	{
+		/// true iff the function takes an arbitrary number of arguments of arbitrary types
+		bool arbitraryParameters = false;
+		/// true iff the gas value to be used is on the stack
+		bool gasSet = false;
+		/// true iff the value to be sent is on the stack
+		bool valueSet = false;
+		/// iff the salt value (for create2) to be used is on the stack
+		bool saltSet = false;
+		/// true iff the function is called as arg1.fun(arg2, ..., argn).
+		/// This is achieved through the "using for" directive.
+		bool bound = false;
+
+		static Options withArbitraryParameters()
+		{
+			Options result;
+			result.arbitraryParameters = true;
+			return result;
+		}
+		static Options fromFunctionType(FunctionType const& _type)
+		{
+			Options result;
+			result.arbitraryParameters = _type.takesArbitraryParameters();
+			result.gasSet = _type.gasSet();
+			result.valueSet = _type.valueSet();
+			result.saltSet = _type.saltSet();
+			result.bound = _type.bound();
+			return result;
+		}
+	};
+
 
 	/// Creates the type of a function.
 	/// @arg _kind must be Kind::Internal, Kind::External or Kind::Declaration.

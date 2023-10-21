@@ -61,6 +61,18 @@ int magicVariableToID(std::string const& _name)
 	else if (_name == "tx") return -26;
 	else if (_name == "type") return -27;
 	else if (_name == "this") return -28;
+	else if (_name == "pdcv") return -29;
+	else if (_name == "bprv") return -30;
+	else if (_name == "canTrust") return -31;
+	else if (_name == "isRegulatory") return -32;
+	else if (_name == "regular") return -32;
+	else if (_name == "compareStr") return -33;
+	else if (_name == "containStr") return -34;
+	else if (_name == "pub2bid") return -35;
+	else if (_name == "peerId2bid") return -36;
+	else if (_name == "sign2bid") return -37;
+	else if (_name == "setCanTrust") return -38;
+	else if (_name == "str2bid") return -39;
 	else
 		solAssert(false, "Unknown magic variable: \"" + _name + "\".");
 }
@@ -80,6 +92,24 @@ inline vector<shared_ptr<MagicVariableDeclaration const>> constructMagicVariable
 		magicVarDecl("ecrecover", TypeProvider::function(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Kind::ECRecover, false, StateMutability::Pure)),
 		magicVarDecl("gasleft", TypeProvider::function(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft, false, StateMutability::View)),
 		magicVarDecl("keccak256", TypeProvider::function(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
+		
+		// 新增操作码
+		magicVarDecl("pdcv", TypeProvider::function(strings{"bytes memory","bytes memory"}, strings{"bool"}, FunctionType::Kind::Pdcv, false, StateMutability::Pure)),
+		magicVarDecl("bprv", TypeProvider::function(strings{"bytes memory","bytes memory"}, strings{"bool"}, FunctionType::Kind::Bprv, false, StateMutability::Pure)),
+
+		magicVarDecl("canTrust", TypeProvider::function(strings{"address"}, strings{"uint256"}, FunctionType::Kind::CanTrust, false, StateMutability::Pure)),
+		magicVarDecl("isRegulatory", TypeProvider::function(strings{"address"}, strings{"bool"}, FunctionType::Kind::IsRegulatory, false, StateMutability::Pure)),
+		magicVarDecl("regular", TypeProvider::function(strings{"string memory", "string memory"}, strings{"bool"}, FunctionType::Kind::Regular, false, StateMutability::Pure)),
+		magicVarDecl("compareStr", TypeProvider::function(strings{"string memory", "string memory"}, strings{"bool"}, FunctionType::Kind::CompareStr, false, StateMutability::Pure)),
+		magicVarDecl("containStr", TypeProvider::function(strings{"string memory", "string memory"}, strings{"bool"}, FunctionType::Kind::ContainStr, false, StateMutability::Pure)),
+
+		magicVarDecl("pub2bid", TypeProvider::function(strings{"bytes memory"}, strings{"address"}, FunctionType::Kind::Pub2Bid, false, StateMutability::Pure)),
+		magicVarDecl("peerId2bid", TypeProvider::function(strings{"string memory"}, strings{"address"}, FunctionType::Kind::PeerId2Bid, false, StateMutability::Pure)),
+		magicVarDecl("str2bid", TypeProvider::function(strings{"string memory"}, strings{"address"}, FunctionType::Kind::Str2Bid, false, StateMutability::Pure)),
+		magicVarDecl("sign2bid", TypeProvider::function(strings{"bytes32", "bytes32", "bytes32", "bytes32", "bytes32", "uint8"}, strings{"address"}, FunctionType::Kind::Sign2Bid, false, StateMutability::Pure)),
+
+		magicVarDecl("setCanTrust", TypeProvider::function(strings{"address", "uint256"}, strings{"uint256"}, FunctionType::Kind::SetCanTrust, false, StateMutability::NonPayable)),
+		
 		magicVarDecl("msg", TypeProvider::magic(MagicType::Kind::Message)),
 		magicVarDecl("mulmod", TypeProvider::function(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::MulMod, false, StateMutability::Pure)),
 		magicVarDecl("now", TypeProvider::uint256()),

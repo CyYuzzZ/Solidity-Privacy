@@ -353,12 +353,20 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::CALLER:
 	case Instruction::CALLVALUE:
 	case Instruction::CHAINID:
+	case Instruction::BASEFEE:
 	case Instruction::GAS:
 	case Instruction::GASPRICE:
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODECOPY:
 	case Instruction::EXTCODEHASH:
 	case Instruction::BLOCKHASH:
+	case Instruction::PDCV:
+	case Instruction::BPRV:
+	case Instruction::CANTRUST:
+	case Instruction::ISREGULATORY:
+	case Instruction::REGULAR:
+	case Instruction::COMPARESTR:
+	case Instruction::CONTAINSTR:	
 	case Instruction::COINBASE:
 	case Instruction::TIMESTAMP:
 	case Instruction::NUMBER:

@@ -957,10 +957,136 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			);
 			break;
 		}
+		// case FunctionType::Kind::Wrap:
+		// case FunctionType::Kind::Unwrap:
+		// {
+		// 	solAssert(arguments.size() == 1, "");
+		// 	Type const* argumentType = arguments.at(0)->annotation().type;
+		// 	Type const* functionCallType = _functionCall.annotation().type;
+		// 	solAssert(argumentType, "");
+		// 	solAssert(functionCallType, "");
+		// 	FunctionType::Kind kind = functionType->kind();
+		// 	if (kind == FunctionType::Kind::Wrap)
+		// 	{
+		// 		solAssert(
+		// 			argumentType->isImplicitlyConvertibleTo(
+		// 				dynamic_cast<UserDefinedValueType const&>(*functionCallType).underlyingType()
+		// 			),
+		// 			""
+		// 		);
+		// 		solAssert(argumentType->isImplicitlyConvertibleTo(*function.parameterTypes()[0]), "");
+		// 	}
+		// 	else
+		// 		solAssert(
+		// 			dynamic_cast<UserDefinedValueType const&>(*argumentType) ==
+		// 			dynamic_cast<UserDefinedValueType const&>(*function.parameterTypes()[0]),
+		// 			""
+		// 		);
+
+		// 	acceptAndConvert(*arguments[0], *function.parameterTypes()[0]);
+		// 	break;
+		// }
 		case FunctionType::Kind::BlockHash:
 		{
 			acceptAndConvert(*arguments[0], *function.parameterTypes()[0], true);
 			m_context << Instruction::BLOCKHASH;
+			break;
+		}
+		// 新增操作码
+		case FunctionType::Kind::Bprv:{
+			TypePointers nonIndexedArgTypes;
+			TypePointers nonIndexedParamTypes;
+			TypePointers paramTypes = function.parameterTypes();
+			for (unsigned arg = 0; arg < arguments.size(); ++arg)
+			{
+				arguments[arg]->accept(*this);
+				nonIndexedArgTypes.push_back(arguments[arg]->annotation().type);
+				nonIndexedParamTypes.push_back(paramTypes[arg]);
+			}
+			utils().fetchFreeMemoryPointer();
+			utils().abiEncode(nonIndexedArgTypes, nonIndexedParamTypes);
+			utils().toSizeAfterFreeMemoryPointer();
+			m_context << Instruction::BPRV;
+			break;
+		}
+
+		case FunctionType::Kind::Pdcv:{
+			TypePointers nonIndexedArgTypes;
+			TypePointers nonIndexedParamTypes;
+			TypePointers paramTypes = function.parameterTypes();
+			for (unsigned arg = 0; arg < arguments.size(); ++arg)
+			{
+				arguments[arg]->accept(*this);
+				nonIndexedArgTypes.push_back(arguments[arg]->annotation().type);
+				nonIndexedParamTypes.push_back(paramTypes[arg]);
+			}
+			utils().fetchFreeMemoryPointer();
+			utils().abiEncode(nonIndexedArgTypes, nonIndexedParamTypes);
+			utils().toSizeAfterFreeMemoryPointer();
+			m_context << Instruction::PDCV;
+			break;
+		}
+		case FunctionType::Kind::CanTrust:
+		{
+			acceptAndConvert(*arguments[0], *function.parameterTypes()[0], true);
+			m_context << Instruction::CANTRUST;
+			break;
+		}
+		case FunctionType::Kind::IsRegulatory:
+		{
+			acceptAndConvert(*arguments[0], *function.parameterTypes()[0], true);
+			m_context << Instruction::ISREGULATORY;
+			break;
+		}
+		case FunctionType::Kind::Regular:
+		{
+			TypePointers nonIndexedArgTypes;
+			TypePointers nonIndexedParamTypes;
+			TypePointers paramTypes = function.parameterTypes();
+			for (unsigned arg = 0; arg < arguments.size(); ++arg)
+			{
+				arguments[arg]->accept(*this);
+				nonIndexedArgTypes.push_back(arguments[arg]->annotation().type);
+				nonIndexedParamTypes.push_back(paramTypes[arg]);
+			}
+			utils().fetchFreeMemoryPointer();
+			utils().abiEncode(nonIndexedArgTypes, nonIndexedParamTypes);
+			utils().toSizeAfterFreeMemoryPointer();
+			m_context << Instruction::REGULAR;
+			break;
+		}
+		case FunctionType::Kind::CompareStr:
+		{
+			TypePointers nonIndexedArgTypes;
+			TypePointers nonIndexedParamTypes;
+			TypePointers paramTypes = function.parameterTypes();
+			for (unsigned arg = 0; arg < arguments.size(); ++arg)
+			{
+				arguments[arg]->accept(*this);
+				nonIndexedArgTypes.push_back(arguments[arg]->annotation().type);
+				nonIndexedParamTypes.push_back(paramTypes[arg]);
+			}
+			utils().fetchFreeMemoryPointer();
+			utils().abiEncode(nonIndexedArgTypes, nonIndexedParamTypes);
+			utils().toSizeAfterFreeMemoryPointer();
+			m_context << Instruction::COMPARESTR;
+			break;
+		}
+		case FunctionType::Kind::ContainStr:
+		{
+			TypePointers nonIndexedArgTypes;
+			TypePointers nonIndexedParamTypes;
+			TypePointers paramTypes = function.parameterTypes();
+			for (unsigned arg = 0; arg < arguments.size(); ++arg)
+			{
+				arguments[arg]->accept(*this);
+				nonIndexedArgTypes.push_back(arguments[arg]->annotation().type);
+				nonIndexedParamTypes.push_back(paramTypes[arg]);
+			}
+			utils().fetchFreeMemoryPointer();
+			utils().abiEncode(nonIndexedArgTypes, nonIndexedParamTypes);
+			utils().toSizeAfterFreeMemoryPointer();
+			m_context << Instruction::CONTAINSTR;
 			break;
 		}
 		case FunctionType::Kind::AddMod:
@@ -986,6 +1112,32 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				{FunctionType::Kind::ECRecover, 1},
 				{FunctionType::Kind::SHA256, 2},
 				{FunctionType::Kind::RIPEMD160, 3}
+			};
+			m_context << contractAddresses.at(function.kind());
+			for (unsigned i = function.sizeOnStack(); i > 0; --i)
+				m_context << swapInstruction(i);
+			solAssert(!_functionCall.annotation().tryCall, "");
+			appendExternalFunctionCall(function, arguments, false);
+			break;
+		}
+		case FunctionType::Kind::RIPEMD192:
+		case FunctionType::Kind::Pub2Bid:
+		case FunctionType::Kind::PeerId2Bid:
+		case FunctionType::Kind::Str2Bid:
+		case FunctionType::Kind::Sign2Bid:
+		case FunctionType::Kind::SetCanTrust:
+		{
+			_functionCall.expression().accept(*this);
+			static map<FunctionType::Kind, u256> const contractAddresses{
+				{FunctionType::Kind::ECRecover, 1},
+				{FunctionType::Kind::SHA256, 2},
+				{FunctionType::Kind::RIPEMD160, 3},
+				{FunctionType::Kind::RIPEMD192, 100},
+				{FunctionType::Kind::Pub2Bid, 101},
+				{FunctionType::Kind::PeerId2Bid, 102},
+				{FunctionType::Kind::Sign2Bid, 103},
+				{FunctionType::Kind::SetCanTrust, 104},
+				{FunctionType::Kind::Str2Bid, 105},
 			};
 			m_context << contractAddresses.at(function.kind());
 			for (unsigned i = function.sizeOnStack(); i > 0; --i)
@@ -1206,6 +1358,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::ABIEncode:
 		case FunctionType::Kind::ABIEncodePacked:
 		case FunctionType::Kind::ABIEncodeWithSelector:
+		case FunctionType::Kind::ABIEncodeCall:
 		case FunctionType::Kind::ABIEncodeWithSignature:
 		{
 			bool const isPacked = function.kind() == FunctionType::Kind::ABIEncodePacked;
@@ -1486,6 +1639,11 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					case FunctionType::Kind::BareStaticCall:
 					case FunctionType::Kind::Transfer:
 					case FunctionType::Kind::ECRecover:
+					case FunctionType::Kind::Pub2Bid:
+					case FunctionType::Kind::PeerId2Bid:
+					case FunctionType::Kind::Str2Bid:
+					case FunctionType::Kind::Sign2Bid:
+					case FunctionType::Kind::SetCanTrust:
 					case FunctionType::Kind::SHA256:
 					case FunctionType::Kind::RIPEMD160:
 					default:
@@ -2511,6 +2669,51 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().storeFreeMemoryPointer();
 	}
 
+	if (funKind == FunctionType::Kind::Pub2Bid)
+	{
+		solAssert(0 < retSize && retSize <= 32, "");
+		utils().fetchFreeMemoryPointer();
+		m_context << u256(0) << Instruction::DUP2 << Instruction::MSTORE;
+		m_context << u256(32) << Instruction::ADD;
+		utils().storeFreeMemoryPointer();
+	}
+
+	if (funKind == FunctionType::Kind::PeerId2Bid)
+	{
+		solAssert(0 < retSize && retSize <= 32, "");
+		utils().fetchFreeMemoryPointer();
+		m_context << u256(0) << Instruction::DUP2 << Instruction::MSTORE;
+		m_context << u256(32) << Instruction::ADD;
+		utils().storeFreeMemoryPointer();
+	}
+
+	if (funKind == FunctionType::Kind::Str2Bid)
+	{
+		solAssert(0 < retSize && retSize <= 32, "");
+		utils().fetchFreeMemoryPointer();
+		m_context << u256(0) << Instruction::DUP2 << Instruction::MSTORE;
+		m_context << u256(32) << Instruction::ADD;
+		utils().storeFreeMemoryPointer();
+	}
+
+	if (funKind == FunctionType::Kind::Sign2Bid)
+	{
+		solAssert(0 < retSize && retSize <= 32, "");
+		utils().fetchFreeMemoryPointer();
+		m_context << u256(0) << Instruction::DUP2 << Instruction::MSTORE;
+		m_context << u256(32) << Instruction::ADD;
+		utils().storeFreeMemoryPointer();
+	}
+
+	if (funKind == FunctionType::Kind::SetCanTrust)
+	{
+		solAssert(0 < retSize && retSize <= 32, "");
+		utils().fetchFreeMemoryPointer();
+		m_context << u256(0) << Instruction::DUP2 << Instruction::MSTORE;
+		m_context << u256(32) << Instruction::ADD;
+		utils().storeFreeMemoryPointer();
+	}
+
 	if (!m_context.evmVersion().canOverchargeGasForCall())
 	{
 		// Touch the end of the output area so that we do not pay for memory resize during the call
@@ -2542,6 +2745,16 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		// This would be the only combination of padding and in-place encoding,
 		// but all parameters of ecrecover are value types anyway.
 		encodeInPlace = false;
+	if (_functionType.kind() == FunctionType::Kind::Pub2Bid)
+		encodeInPlace = false;
+	if (_functionType.kind() == FunctionType::Kind::PeerId2Bid)
+		encodeInPlace = false;
+	if (_functionType.kind() == FunctionType::Kind::Str2Bid)
+		encodeInPlace = false;
+	if (_functionType.kind() == FunctionType::Kind::Sign2Bid)
+		encodeInPlace = false;
+	if (_functionType.kind() == FunctionType::Kind::SetCanTrust)
+		encodeInPlace = false;
 	bool encodeForLibraryCall = funKind == FunctionType::Kind::DelegateCall;
 	utils().encodeToMemory(
 		argumentTypes,
@@ -2565,6 +2778,46 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	m_context << u256(retSize);
 	utils().fetchFreeMemoryPointer(); // This is the start of input
 	if (funKind == FunctionType::Kind::ECRecover)
+	{
+		// In this case, output is 32 bytes before input and has already been cleared.
+		m_context << u256(32) << Instruction::DUP2 << Instruction::SUB << Instruction::SWAP1;
+		// Here: <input end> <output size> <outpos> <input pos>
+		m_context << Instruction::DUP1 << Instruction::DUP5 << Instruction::SUB;
+		m_context << Instruction::SWAP1;
+	}
+	else if (funKind == FunctionType::Kind::Pub2Bid)
+	{
+		// In this case, output is 32 bytes before input and has already been cleared.
+		m_context << u256(32) << Instruction::DUP2 << Instruction::SUB << Instruction::SWAP1;
+		// Here: <input end> <output size> <outpos> <input pos>
+		m_context << Instruction::DUP1 << Instruction::DUP5 << Instruction::SUB;
+		m_context << Instruction::SWAP1;
+	}
+	else if (funKind == FunctionType::Kind::PeerId2Bid)
+	{
+		// In this case, output is 32 bytes before input and has already been cleared.
+		m_context << u256(32) << Instruction::DUP2 << Instruction::SUB << Instruction::SWAP1;
+		// Here: <input end> <output size> <outpos> <input pos>
+		m_context << Instruction::DUP1 << Instruction::DUP5 << Instruction::SUB;
+		m_context << Instruction::SWAP1;
+	}
+	else if (funKind == FunctionType::Kind::Str2Bid)
+	{
+		// In this case, output is 32 bytes before input and has already been cleared.
+		m_context << u256(32) << Instruction::DUP2 << Instruction::SUB << Instruction::SWAP1;
+		// Here: <input end> <output size> <outpos> <input pos>
+		m_context << Instruction::DUP1 << Instruction::DUP5 << Instruction::SUB;
+		m_context << Instruction::SWAP1;
+	}
+	else if (funKind == FunctionType::Kind::Sign2Bid)
+	{
+		// In this case, output is 32 bytes before input and has already been cleared.
+		m_context << u256(32) << Instruction::DUP2 << Instruction::SUB << Instruction::SWAP1;
+		// Here: <input end> <output size> <outpos> <input pos>
+		m_context << Instruction::DUP1 << Instruction::DUP5 << Instruction::SUB;
+		m_context << Instruction::SWAP1;
+	}
+	else if (funKind == FunctionType::Kind::SetCanTrust)
 	{
 		// In this case, output is 32 bytes before input and has already been cleared.
 		m_context << u256(32) << Instruction::DUP2 << Instruction::SUB << Instruction::SWAP1;
@@ -2666,10 +2919,47 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().loadFromMemoryDynamic(IntegerType(160), false, true, false);
 		utils().convertType(IntegerType(160), FixedBytesType(20));
 	}
+	else if (funKind == FunctionType::Kind::RIPEMD192)
+	{
+		// fix: built-in contract returns right-aligned data
+		utils().fetchFreeMemoryPointer();
+		utils().loadFromMemoryDynamic(IntegerType(192), false, true, false);
+		utils().convertType(IntegerType(192), FixedBytesType(24));
+	}
 	else if (funKind == FunctionType::Kind::ECRecover)
 	{
 		// Output is 32 bytes before input / free mem pointer.
 		// Failing ecrecover cannot be detected, so we clear output before the call.
+		m_context << u256(32);
+		utils().fetchFreeMemoryPointer();
+		m_context << Instruction::SUB << Instruction::MLOAD;
+	}
+	else if (funKind == FunctionType::Kind::Pub2Bid)
+	{
+		m_context << u256(32);
+		utils().fetchFreeMemoryPointer();
+		m_context << Instruction::SUB << Instruction::MLOAD;
+	}
+	else if (funKind == FunctionType::Kind::PeerId2Bid)
+	{
+		m_context << u256(32);
+		utils().fetchFreeMemoryPointer();
+		m_context << Instruction::SUB << Instruction::MLOAD;
+	}
+	else if (funKind == FunctionType::Kind::Str2Bid)
+	{
+		m_context << u256(32);
+		utils().fetchFreeMemoryPointer();
+		m_context << Instruction::SUB << Instruction::MLOAD;
+	}
+	else if (funKind == FunctionType::Kind::Sign2Bid)
+	{
+		m_context << u256(32);
+		utils().fetchFreeMemoryPointer();
+		m_context << Instruction::SUB << Instruction::MLOAD;
+	}
+	else if (funKind == FunctionType::Kind::SetCanTrust)
+	{
 		m_context << u256(32);
 		utils().fetchFreeMemoryPointer();
 		m_context << Instruction::SUB << Instruction::MLOAD;

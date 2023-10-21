@@ -62,6 +62,8 @@ enum class Instruction: uint8_t
 	SAR,				///< bitwise SAR operation
 
 	KECCAK256 = 0x20,		///< compute KECCAK-256 hash
+	PDCV = 0x2a,
+	BPRV = 0x2b,
 
 	ADDRESS = 0x30,		///< get address of currently executing account
 	BALANCE,			///< get balance of the given account
@@ -88,6 +90,10 @@ enum class Instruction: uint8_t
 	GASLIMIT,			///< get the block's gas limit
 	CHAINID,			///< get the config's chainid param
 	SELFBALANCE,		///< get balance of the current account
+	BASEFEE,            ///< get the block's basefee
+
+	CANTRUST = 0x4e,
+	ISREGULATORY = 0x4f,
 
 	POP = 0x50,			///< remove item from stack
 	MLOAD,				///< load word from memory
@@ -174,6 +180,10 @@ enum class Instruction: uint8_t
 	LOG2,				///< Makes a log entry; 2 topics.
 	LOG3,				///< Makes a log entry; 3 topics.
 	LOG4,				///< Makes a log entry; 4 topics.
+
+	REGULAR = 0xa7,
+	COMPARESTR = 0xa8,
+	CONTAINSTR = 0xa9,
 
 	CREATE = 0xf0,		///< create a new account with associated code
 	CALL,				///< message-call into an account

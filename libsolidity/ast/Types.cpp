@@ -2881,12 +2881,27 @@ string FunctionType::richIdentifier() const
 	case Kind::ECRecover: id += "ecrecover"; break;
 	case Kind::SHA256: id += "sha256"; break;
 	case Kind::RIPEMD160: id += "ripemd160"; break;
+	case Kind::RIPEMD192: id += "ripemd192"; break;
 	case Kind::GasLeft: id += "gasleft"; break;
 	case Kind::Event: id += "event"; break;
 	case Kind::Error: id += "error"; break;
+	// case Kind::Wrap: id += "wrap"; break;
+	// case Kind::Unwrap: id += "unwrap"; break;
 	case Kind::SetGas: id += "setgas"; break;
 	case Kind::SetValue: id += "setvalue"; break;
 	case Kind::BlockHash: id += "blockhash"; break;
+	case Kind::Pdcv: id += "pdcv"; break;
+	case Kind::Bprv: id += "bprv"; break;
+	case Kind::CanTrust: id += "canTrust"; break;
+	case Kind::IsRegulatory: id += "isRegulatory"; break;
+	case Kind::Regular: id += "regular"; break;
+	case Kind::CompareStr: id += "compareStr"; break;
+	case Kind::ContainStr: id += "containStr"; break;
+	case Kind::Pub2Bid: id += "pub2bid"; break;
+	case Kind::PeerId2Bid: id += "peerId2bid"; break;
+	case Kind::Str2Bid: id += "str2bid"; break;
+	case Kind::Sign2Bid: id += "sign2bid"; break;
+	case Kind::SetCanTrust: id += "setCanTrust"; break;
 	case Kind::AddMod: id += "addmod"; break;
 	case Kind::MulMod: id += "mulmod"; break;
 	case Kind::ArrayPush: id += "arraypush"; break;
@@ -2898,6 +2913,7 @@ string FunctionType::richIdentifier() const
 	case Kind::ABIEncode: id += "abiencode"; break;
 	case Kind::ABIEncodePacked: id += "abiencodepacked"; break;
 	case Kind::ABIEncodeWithSelector: id += "abiencodewithselector"; break;
+	case Kind::ABIEncodeCall: id += "abiencodecall"; break;
 	case Kind::ABIEncodeWithSignature: id += "abiencodewithsignature"; break;
 	case Kind::ABIDecode: id += "abidecode"; break;
 	case Kind::MetaType: id += "metatype"; break;
@@ -3396,6 +3412,12 @@ bool FunctionType::isBareCall() const
 	case Kind::ECRecover:
 	case Kind::SHA256:
 	case Kind::RIPEMD160:
+	case Kind::RIPEMD192:
+	case Kind::Pub2Bid:
+	case Kind::PeerId2Bid:
+	case Kind::Str2Bid:
+	case Kind::Sign2Bid:
+	case Kind::SetCanTrust:
 		return true;
 	default:
 		return false;
@@ -3459,15 +3481,24 @@ bool FunctionType::isPure() const
 		m_kind == Kind::ECRecover ||
 		m_kind == Kind::SHA256 ||
 		m_kind == Kind::RIPEMD160 ||
+		m_kind == Kind::RIPEMD192 ||
+		m_kind == Kind::Pub2Bid ||
+		m_kind == Kind::PeerId2Bid ||
+		m_kind == Kind::Str2Bid ||
+		m_kind == Kind::Sign2Bid ||
+		m_kind == Kind::SetCanTrust ||
 		m_kind == Kind::AddMod ||
 		m_kind == Kind::MulMod ||
 		m_kind == Kind::ObjectCreation ||
 		m_kind == Kind::ABIEncode ||
 		m_kind == Kind::ABIEncodePacked ||
 		m_kind == Kind::ABIEncodeWithSelector ||
+		m_kind == Kind::ABIEncodeCall ||
 		m_kind == Kind::ABIEncodeWithSignature ||
 		m_kind == Kind::ABIDecode ||
 		m_kind == Kind::MetaType;
+		// m_kind == Kind::Wrap ||
+		// m_kind == Kind::Unwrap;
 }
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
@@ -3935,6 +3966,17 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 				FunctionType::Kind::ABIEncodeWithSelector,
 				true,
 				StateMutability::Pure
+			)},
+			{"encodeCall", TypeProvider::function(
+				TypePointers{},
+				TypePointers{TypeProvider::array(DataLocation::Memory)},
+				strings{},
+				strings{1, ""},
+				FunctionType::Kind::ABIEncodeCall,
+				true,
+				StateMutability::Pure
+				// nullptr,
+				// FunctionType::Options::withArbitraryParameters()
 			)},
 			{"encodeWithSignature", TypeProvider::function(
 				TypePointers{TypeProvider::array(DataLocation::Memory, true)},

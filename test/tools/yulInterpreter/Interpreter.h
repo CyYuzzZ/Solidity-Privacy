@@ -90,6 +90,7 @@ struct InterpreterState
 	u256 difficulty = 0x9999999;
 	u256 gaslimit = 4000000;
 	u256 chainid = 0x01;
+	u256 basefee = 1000;
 	/// Log of changes / effects. Sholud be structured data in the future.
 	std::vector<std::string> trace;
 	/// This is actually an input parameter that more or less limits the runtime.

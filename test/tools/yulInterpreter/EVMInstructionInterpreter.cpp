@@ -220,6 +220,8 @@ u256 EVMInstructionInterpreter::eval(
 		return m_state.gasprice;
 	case Instruction::CHAINID:
 		return m_state.chainid;
+	case Instruction::BASEFEE:
+		return m_state.basefee;
 	case Instruction::EXTCODESIZE:
 		return u256(keccak256(h256(arg[0]))) & 0xffffff;
 	case Instruction::EXTCODEHASH:
@@ -248,6 +250,20 @@ u256 EVMInstructionInterpreter::eval(
 			return 0;
 		else
 			return 0xaaaaaaaa + (arg[0] - m_state.blockNumber - 256);
+	case Instruction::BPRV:
+		return arg[0];
+	case Instruction::PDCV:
+		return arg[0];
+	case Instruction::ISREGULATORY:
+		return arg[0];
+	case Instruction::REGULAR:
+		return arg[0];
+	case Instruction::COMPARESTR:
+		return arg[0];
+	case Instruction::CONTAINSTR:
+		return arg[0];
+	case Instruction::CANTRUST:
+		return arg[0];
 	case Instruction::COINBASE:
 		return h256(m_state.coinbase, h256::AlignRight);
 	case Instruction::TIMESTAMP:
